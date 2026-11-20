@@ -1,0 +1,175 @@
+name: Build OrbisJVM + OrbisMC for PS4
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # Manual trigger from Actions tab
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly Sunday 2AM UTC
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  # Cache key for toolchain
+  TOOLCHAIN_VERSION: "latest"
+
+jobs:
+  build:
+    name: Build (PS4 x86_64-scei-ps4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      # ─────────────────────────────────────────────────────────────
+      # 1. Checkout
+      # ─────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0  # Needed for git describe in versioning
+
+      # ─────────────────────────────────────────────────────────────
+      # 2. Setup OpenOrbis PS4 Toolchain
+      # ─────────────────────────────────────────────────────────────
+      - name: Setup OpenOrbis PS4 Toolchain
+        uses: OpenOrbis/toolchain-action@main
+        with:
+          version: ${{ env.TOOLCHAIN_VERSION }}
+          # cache: true  # Caches toolchain between runs (saves ~2 min)
+
+      # ─────────────────────────────────────────────────────────────
+      # 3. Cache OrbisJVM build (optional, speeds up repeat builds)
+      # ─────────────────────────────────────────────────────────────
+      - name: Cache OrbisJVM build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/OrbisJVM/build
+            ~/.cache/cmake
+          key: orbisjvm-${{ runner.os }}-${{ hashFiles('OrbisJVM/CMakeLists.txt', 'OrbisJVM/src/**/*.c', 'OrbisJVM/include/**/*.h') }}
+          restore-keys: |
+            orbisjvm-${{ runner.os }}-
+
+      # ─────────────────────────────────────────────────────────────
+      # 4. Build OrbisJVM
+      # ─────────────────────────────────────────────────────────────
+      - name: Build OrbisJVM
+        working-directory: ./OrbisJVM
+        run: |
+          chmod +x tools/build.sh
+          ./tools/build.sh release
+        env:
+          OO_PS4_TOOLCHAIN: ${{ env.OO_PS4_TOOLCHAIN }}
+
+      # ─────────────────────────────────────────────────────────────
+      # 5. Run OrbisJVM tests (optional, may need real PS4 hardware)
+      # ─────────────────────────────────────────────────────────────
+      - name: Run OrbisJVM tests
+        working-directory: ./OrbisJVM/build
+        run: |
+          ctest --output-on-failure --parallel $(nproc)
+        continue-on-error: true  # Some tests need real PS4 hardware
+
+      # ─────────────────────────────────────────────────────────────
+      # 6. Package OrbisJVM
+      # ─────────────────────────────────────────────────────────────
+      - name: Package OrbisJVM
+        working-directory: ./OrbisJVM
+        run: |
+          ./tools/package.sh
+        continue-on-error: true
+
+      # ─────────────────────────────────────────────────────────────
+      # 7. Cache OrbisMC build
+      # ─────────────────────────────────────────────────────────────
+      - name: Cache OrbisMC build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/OrbisJVM/orbis-mc/build
+            ~/.cache/cmake
+          key: orbismc-${{ runner.os }}-${{ hashFiles('OrbisJVM/orbis-mc/CMakeLists.txt', 'OrbisJVM/orbis-mc/**/*.c', 'OrbisJVM/orbis-mc/**/*.h') }}
+          restore-keys: |
+            orbismc-${{ runner.os }}-
+
+      # ─────────────────────────────────────────────────────────────
+      # 8. Build OrbisMC
+      # ─────────────────────────────────────────────────────────────
+      - name: Configure OrbisMC
+        working-directory: ./OrbisJVM/orbis-mc
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ../..
+
+      - name: Build OrbisMC
+        working-directory: ./OrbisJVM/orbis-mc/build
+        run: |
+          ninja -j$(nproc)
+
+      # ─────────────────────────────────────────────────────────────
+      # 9. Upload Artifacts
+      # ─────────────────────────────────────────────────────────────
+      - name: Upload OrbisJVM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbisjvm-${{ github.sha }}
+          path: |
+            OrbisJVM/build/liborbisjvm.a
+            OrbisJVM/build/orbisjvm-diagnose
+            OrbisJVM/dist/*.tar.gz
+            OrbisJVM/build/compile_commands.json
+          retention-days: 30
+          compression-level: 6
+
+      - name: Upload OrbisMC artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbismc-${{ github.sha }}
+          path: |
+            OrbisJVM/orbis-mc/build/orbis-mc
+            OrbisJVM/orbis-mc/build/orbis-mc-launcher
+          retention-days: 30
+          compression-level: 6
+
+  # ─────────────────────────────────────────────────────────────────
+  # RELEASE JOB: Create GitHub Release on tag push
+  # ─────────────────────────────────────────────────────────────────
+  release:
+    name: Create Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download OrbisJVM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: orbisjvm-${{ github.sha }}
+          path: ./orbisjvm
+
+      - name: Download OrbisMC artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: orbismc-${{ github.sha }}
+          path: ./orbismc
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ./orbisjvm/*.tar.gz
+            ./orbisjvm/liborbisjvm.a
+            ./orbisjvm/orbisjvm-diagnose
+            ./orbismc/orbis-mc
+            ./orbismc/orbis-mc-launcher
+          generate_release_notes: true
+          draft: false
+          prerelease: false
