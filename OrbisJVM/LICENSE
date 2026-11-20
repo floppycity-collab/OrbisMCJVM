@@ -1,0 +1,54 @@
+OrbisJVM - Native Java Runtime for PlayStation 4
+Copyright (C) 2024-2026 OrbisJVM Project
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+This project builds upon the excellent work of the OpenOrbis community:
+
+OpenOrbis PS4 Toolchain
+Copyright (C) OpenOrbis Team
+Licensed under GPLv3
+
+musl libc for PS4
+Copyright (C) OpenOrbis Team
+Licensed under MIT
+
+libcxx for PS4 (LLVM Project)
+Copyright (C) LLVM Project
+Licensed under Apache 2.0 with LLVM Exception
+
+SDL-PS4
+Copyright (C) znullptr
+Licensed under zlib
+
+---
+
+Third-party dependencies used in this project:
+
+OpenSSL
+Copyright (C) 1995-2024 The OpenSSL Project
+Licensed under Apache 2.0
+
+---
+
+This software is intended for educational and research purposes on
+jailbroken PlayStation 4 consoles running user-authorized homebrew
+environments. No firmware bypasses, exploits, or circumvention of
+Sony's security measures are included or facilitated by this project.
+
+The OrbisJVM project is not affiliated with, endorsed by, or sponsored
+by Sony Interactive Entertainment LLC. PlayStation and PS4 are
+trademarks of Sony Interactive Entertainment LLC.
