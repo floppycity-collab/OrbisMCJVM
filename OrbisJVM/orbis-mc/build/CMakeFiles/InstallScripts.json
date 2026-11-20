@@ -1,0 +1,12 @@
+{
+	"InstallScripts" : 
+	[
+		"/mnt/c/Users/itstiziooo/AppData/Local/Claude-3p/local-agent-mode-sessions/76f6f243/00000000/e976a74b/outputs/OrbisJVM/orbis-mc/build/cmake_install.cmake",
+		"/mnt/c/Users/itstiziooo/AppData/Local/Claude-3p/local-agent-mode-sessions/76f6f243/00000000/e976a74b/outputs/OrbisJVM/orbis-mc/build/tests/memory/cmake_install.cmake",
+		"/mnt/c/Users/itstiziooo/AppData/Local/Claude-3p/local-agent-mode-sessions/76f6f243/00000000/e976a74b/outputs/OrbisJVM/orbis-mc/build/tests/threading/cmake_install.cmake",
+		"/mnt/c/Users/itstiziooo/AppData/Local/Claude-3p/local-agent-mode-sessions/76f6f243/00000000/e976a74b/outputs/OrbisJVM/orbis-mc/build/tests/filesystem/cmake_install.cmake",
+		"/mnt/c/Users/itstiziooo/AppData/Local/Claude-3p/local-agent-mode-sessions/76f6f243/00000000/e976a74b/outputs/OrbisJVM/orbis-mc/build/tests/networking/cmake_install.cmake",
+		"/mnt/c/Users/itstiziooo/AppData/Local/Claude-3p/local-agent-mode-sessions/76f6f243/00000000/e976a74b/outputs/OrbisJVM/orbis-mc/build/tests/runtime/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
